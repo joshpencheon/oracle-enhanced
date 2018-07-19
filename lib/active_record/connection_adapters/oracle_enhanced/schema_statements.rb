@@ -95,10 +95,11 @@ module ActiveRecord
                 e.index_owner = i.owner AND e.column_position = c.column_position
               LEFT OUTER JOIN all_tab_cols#{db_link} atc ON i.table_name = atc.table_name AND
                 c.column_name = atc.column_name AND i.owner = atc.owner AND atc.hidden_column = 'NO'
-            WHERE i.owner = :owner
+              LEFT OUTER JOIN all_constraints uc ON uc.index_name = i.index_name AND uc.owner = i.owner AND
+                uc.constraint_type = 'P'
+            WHERE uc.constraint_type is null
+               AND i.owner = :owner
                AND i.table_owner = :owner
-               AND NOT EXISTS (SELECT uc.index_name FROM all_constraints uc
-                WHERE uc.index_name = i.index_name AND uc.owner = i.owner AND uc.constraint_type = 'P')
             ORDER BY i.index_name, c.column_position
           SQL
 

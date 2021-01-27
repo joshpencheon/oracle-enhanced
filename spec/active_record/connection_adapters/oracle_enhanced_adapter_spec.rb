@@ -808,4 +808,35 @@ describe "OracleEnhancedAdapter" do
       expect(TestComment.where(test_post_id: TestPost.select(:id)).size).to eq(1)
     end
   end
+
+  describe "bulk insert" do
+    before(:all) do
+      ActiveRecord::Base.establish_connection(CONNECTION_PARAMS)
+      @conn = ActiveRecord::Base.connection
+      schema_define do
+        create_table :test_posts, force: true do |t|
+          t.string :title
+        end
+      end
+      class ::TestPost < ActiveRecord::Base
+      end
+    end
+
+    after(:all) do
+      schema_define do
+        drop_table :test_posts, if_exists: true
+      end
+      Object.send(:remove_const, "TestPost")
+      ActiveRecord::Base.clear_cache!
+    end
+
+    it "should insert multiple rows at once" do
+      TestPost.insert_all!([
+        { id: 1, title: 'Post A' },
+        { id: 2, title: 'Post B' }
+      ])
+
+      assert_equal 2, TestPost.count
+    end
+  end
 end
